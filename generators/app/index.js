@@ -18,8 +18,34 @@ const generators = require('yeoman-generator');
  */
 module.exports = generators.Base.extend({
     writing: {
+        /*
+         * Assumptions:
+         *
+         * - This generator is called via cnn-base with composeWith.
+         * - PACKAGE_NAME starts with `generator-`.
+         * - GENERATOR_NAME can be derived from a proper PACKAGE_NAME.
+         * - REPOSITORY_NAME is the same as the PACKAGE_NAME.
+         *
+         * None of these assumptions are currently enforced, so this can fall
+         * apart very quickly.
+         */
         copyFiles: function () {
-            this.fs.copy(this.templatePath('generators/'), this.destinationPath('generators/'));
+            let packageJson = this.fs.readJSON(this.destinationPath('package.json'));
+
+            this.fs.copy(
+                this.templatePath('generators/'),
+                this.destinationPath('generators/')
+            );
+
+            this.fs.copyTpl(
+                this.templatePath('README.md'),
+                this.destinationPath('README.md'),
+                {
+                    PACKAGE_NAME: packageJson.name,
+                    GENERATOR_NAME: packageJson.name.match(/generator\-(.+)$/)[1],
+                    REPOSITORY_NAME: packageJson.name
+                }
+            );
         }
     },
 
